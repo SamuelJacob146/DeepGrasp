@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request, UploadFile, File
 from pydantic import BaseModel
 import os
-from pdf_utils import extract_text_from_pdf
+from .pdf_utils import extract_text_from_pdf
 from fastapi.responses import JSONResponse
+from .vectorstore.faiss_store import create_faiss_index
+
 
 app = FastAPI()
 
@@ -27,10 +29,14 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(file_location + ".txt", "w") as f:
         f.write(text)
 
+    # Create FAISS index from the extracted text
+    create_faiss_index(text)
+
     return {
         "filename": file.filename,
         "extracted_characters": len(text),
-        "preview": text[:500]
+        "preview": text[:500],
+        "status": "Text indexed to FAISS"
     }
 
 
